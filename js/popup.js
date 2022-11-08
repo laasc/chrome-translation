@@ -13,6 +13,7 @@ chrome.storage.sync.get(['switch'], function (result) {
 selectNode.onchange = function () {
     //划词翻译功能,利用chrome的storageAPI存储开启/关闭状态：把用户选择的选项存储在chrome的 storage 接口中,存到 'switch'中，下次取出来的时候通过 'switch' 取
     chrome.storage.sync.set({switch: this.value})
+
     //通知 content-script.js 用户选择的是开启还是关闭
     //由于chrome浏览器上可能开启了多个窗口&标签页，所以需要先找到currentWindow，和当前活动的网页 active
     chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {

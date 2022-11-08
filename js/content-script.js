@@ -32,10 +32,10 @@ Panel.prototype.create = function () {
   </main>
     `
 
-    // 刚刚创建的div元素里的HTML内容素替换成上面的内容
+    //刚刚创建的div元素里的HTML内容素替换成上面的内容
     container.innerHTML = html
 
-    // 给container添加一个class,查看content-script.css,这个class是最外层的div需要的class
+    //给container添加一个class,查看content-script.css,这个class是最外层的div需要的class
     container.classList.add('translate-panel')
 
     //把container挂载到页面中
@@ -108,18 +108,32 @@ Panel.prototype.pos = function (pos) {
 //实例化一个翻译面板
 let panel = new Panel()
 
+// 鼠标点击事件
+window.onclick = function (e) {
+    //获取到用户选中的内容
+    let raws = window.getSelection().toString().trim()
+    if(!raws) {
+        panel.hide()
+    }
+}
+
+
 //监听鼠标的释放事件
 window.onmouseup = function (e) {
+
+    //如果用户选择的是关闭选项 就不显示翻译面板
+    if (selectState === 'off') return
+
     //获取到用户选中的内容
     let raw = window.getSelection().toString().trim()
 
-    // 获取释放鼠标时，光标在页面上的位置
+    //获取释放鼠标时，光标在页面上的位置
     let x = e.pageX
     let y = e.pageY
 
-    // 如果什么内容都没有选择，就不执行下面的，直接返回
+    //如果什么内容都没有选择，就不执行下面的，直接返回
     if (!raw) {
-        return
+        panel.hide()
     } else {
         //否则执行下面的内容
         //设置翻译面板的显示位置
@@ -130,3 +144,27 @@ window.onmouseup = function (e) {
         panel.show()
     }
 }
+
+
+
+//划词翻译默认是关闭状态
+let selectState = 'on'
+
+//用chrome的storage接口，查看之前有没有存储 'switch' 这一项(查看用户之前是否已选择开启/关闭划词翻译功能,只要选择过,都会存储在switch里)
+chrome.storage.sync.get(['switch'], function (result) {
+    //如果有设置
+    if (result.switch) {
+        //把值(on / off)赋值给网页上翻译插件的状态变量
+        selectState = result.switch
+    }
+});
+
+//运行时，监听是否有数据传过来
+chrome.runtime.onMessage.addListener(
+    function (request) {
+        // 如果有传 'switch' (当选项[开启]/[关闭]发生改变时,popup.js都会给当前活动标签页传递switch数据,也就是用户选择的选项是什么)
+        if (request.switch) {
+            //把用户修改的选项的值赋值给该变量
+            selectState = request.switch
+        }
+    });
